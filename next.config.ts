@@ -1,13 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  typescript: {
-    // ⚠️ This tells Vercel to ignore TypeScript errors so the build succeeds
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    // ⚠️ This ignores linting errors too, just to be safe for the deadline
-    ignoreDuringBuilds: true,
-  },
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  reactStrictMode: true,
 };
 
 export default nextConfig;
