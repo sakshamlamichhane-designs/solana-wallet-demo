@@ -6,15 +6,15 @@ import { Connection, clusterApiUrl, LAMPORTS_PER_SOL, PublicKey } from '@solana/
 export default function Home() {
   const [walletInstalled, setWalletInstalled] = useState(false);
   const [connected, setConnected] = useState(false);
-  const [publicKey, setPublicKey] = useState(null);
-  const [balance, setBalance] = useState(null);
+  const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
   const [status, setStatus] = useState('');
 
+  // Move connection inside or wrap in a check for SSR safety
   const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-  // Button styling
-  const buttonStyle = {
-    backgroundColor: '#4E44CE', // Phantom Purple
+  const buttonStyle: React.CSSProperties = {
+    backgroundColor: '#4E44CE',
     color: 'white',
     padding: '12px 20px',
     borderRadius: '10px',
@@ -28,13 +28,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window?.solana?.isPhantom) {
+    // Check if running in browser and if solana exists
+    const solana = typeof window !== 'undefined' ? (window as any).solana : null;
+
+    if (solana?.isPhantom) {
       setWalletInstalled(true);
-      window.solana.on && window.solana.on('connect', () => {
+      solana.on?.('connect', () => {
         setConnected(true);
-        setPublicKey(window.solana.publicKey?.toString());
+        setPublicKey(solana.publicKey?.toString());
       });
-      window.solana.on && window.solana.on('disconnect', () => {
+      solana.on?.('disconnect', () => {
         setConnected(false);
         setPublicKey(null);
         setBalance(null);
@@ -43,21 +46,23 @@ export default function Home() {
   }, []);
 
   async function connectWallet() {
+    const solana = (window as any).solana;
     try {
       setStatus('Connecting...');
-      const resp = await window.solana.connect();
+      const resp = await solana.connect();
       setPublicKey(resp.publicKey.toString());
       setConnected(true);
       setStatus('Connected');
-      await fetchBalance(resp.publicKey);
-    } catch (e) {
+      await fetchBalance(resp.publicKey.toString());
+    } catch (e: any) {
       setStatus('Connection failed: ' + e.message);
     }
   }
 
   async function disconnectWallet() {
+    const solana = (window as any).solana;
     try {
-      await window.solana.disconnect();
+      await solana.disconnect();
       setConnected(false);
       setPublicKey(null);
       setBalance(null);
@@ -67,10 +72,10 @@ export default function Home() {
     }
   }
 
-  async function fetchBalance(pubKey) {
+  async function fetchBalance(pubKeyStr: string) {
     try {
       setStatus('Fetching balance...');
-      const pk = typeof pubKey === 'string' ? new PublicKey(pubKey) : pubKey;
+      const pk = new PublicKey(pubKeyStr);
       const bal = await connection.getBalance(pk);
       setBalance(bal / LAMPORTS_PER_SOL);
       setStatus('Balance fetched');
@@ -86,9 +91,9 @@ export default function Home() {
       const pk = new PublicKey(publicKey);
       const sig = await connection.requestAirdrop(pk, 1 * LAMPORTS_PER_SOL); 
       await connection.confirmTransaction(sig, 'confirmed');
-      await fetchBalance(pk);
+      await fetchBalance(publicKey);
       setStatus('Airdrop received (devnet)');
-    } catch (e) {
+    } catch (e: any) {
       setStatus('Airdrop failed: ' + (e.message || e));
     }
   }
@@ -132,4 +137,5 @@ export default function Home() {
     </div>
   );
 }
+
 
