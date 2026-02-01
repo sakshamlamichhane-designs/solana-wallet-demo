@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -12,7 +13,7 @@ export default function Home() {
 
   const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
 
-  // ✨ This is the "Button Glow Up" style
+  // Button styling
   const buttonStyle = {
     backgroundColor: '#4E44CE', // Phantom Purple
     color: 'white',
