@@ -85,18 +85,34 @@ export default function Home() {
   }
 
   async function requestAirdrop() {
-    try {
-      setStatus('Requesting airdrop...');
-      if (!publicKey) { setStatus('Connect wallet first'); return; }
-      const pk = new PublicKey(publicKey);
-      const sig = await connection.requestAirdrop(pk, 1 * LAMPORTS_PER_SOL); 
-      await connection.confirmTransaction(sig, 'confirmed');
-      await fetchBalance(publicKey);
-      setStatus('Airdrop received (devnet)');
-    } catch (e: any) {
-      setStatus('Airdrop failed: ' + (e.message || e));
-    }
+  try {
+    setStatus('Requesting airdrop...');
+    if (!publicKey) { setStatus('Connect wallet first'); return; }
+    
+    const pk = new PublicKey(publicKey);
+    
+    
+    const signature = await connection.requestAirdrop(pk, 1 * LAMPORTS_PER_SOL);
+    
+    
+    const latestBlockHash = await connection.getLatestBlockhash();
+    
+    
+    await connection.confirmTransaction({
+      blockhash: latestBlockHash.blockhash,
+      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      signature: signature,
+    });
+
+    await fetchBalance(publicKey);
+    setStatus('Airdrop received (devnet)!');
+  } catch (e: any) {
+    console.error(e);
+    
+    setStatus('Airdrop failed: Devnet is busy. Try again in 1 min.');
   }
+}
+
 
   return (
     <div style={{maxWidth:900, margin:'30px auto', padding:20, fontFamily:'sans-serif', color: '#333'}}>
